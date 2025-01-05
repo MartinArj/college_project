@@ -2,3 +2,8 @@ U:\project\job_portal\job_portal\bin\job_portal.dll
 U:\project\job_portal\job_portal\bin\job_portal.pdb
 U:\project\job_portal\job_portal\obj\Debug\job_portal.dll
 U:\project\job_portal\job_portal\obj\Debug\job_portal.pdb
+D:\COLLEGE_PROJECT\college_project\job_portal\job_portal\bin\job_portal.dll
+D:\COLLEGE_PROJECT\college_project\job_portal\job_portal\bin\job_portal.pdb
+D:\COLLEGE_PROJECT\college_project\job_portal\job_portal\obj\Debug\job_portal.csprojResolveAssemblyReference.cache
+D:\COLLEGE_PROJECT\college_project\job_portal\job_portal\obj\Debug\job_portal.dll
+D:\COLLEGE_PROJECT\college_project\job_portal\job_portal\obj\Debug\job_portal.pdb

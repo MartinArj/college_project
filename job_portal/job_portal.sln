@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "job_portal", "job_portal\job_portal.csproj", "{7B4E7BB6-203C-4B16-BCB6-C07600747E64}"
 EndProject
 Global

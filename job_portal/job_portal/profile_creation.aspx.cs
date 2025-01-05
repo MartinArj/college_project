@@ -6,67 +6,129 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Data.SqlClient;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace job_portal
 {
     public partial class profile_creation : System.Web.UI.Page
     {
+        string path = @"Data Source=LENOVO\SQLEXPRESS;Initial Catalog=job;Integrated Security=True";
+
+        // Method to hash the password
+
+        bool isupdate = false;
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            if (Session["Id"]!=null) 
+            { 
+               
+                isupdate = true;
+                Dno.Text = Session["ID"].ToString();
+                var profile = repository.GetProfiles().FirstOrDefault(s => s.Dno == Dno.Text);
+                txtFirstName.Text = profile.FirstName;
+                txtLastName.Text = profile.LastName;
+                txtEmail.Text = profile.Email;
+                txtPhone.Text = profile.Phone;
+                txtDateOfBirth.Text = profile.DateOfBirth.ToShortDateString();
+                txtDegree.Text = profile.Degree;
+                txtUniversity.Text = profile.University;
+                txtSkills.Text = profile.Skills;
+                imgProfilePicture.ImageUrl = profile.ProfilePicture;
+                
+            }
         }
 
-        
-           protected void btnCreateProfile_Click(object sender, EventArgs e)
+        protected void btnCreateProfile_Click(object sender, EventArgs e)
         {
-            string error;
-            // Check if a file is uploaded
-            if (fileProfilePicture.HasFile)
+            try
             {
-                // Check the file extension to ensure it's an image
-                string fileExtension = Path.GetExtension(fileProfilePicture.FileName).ToLower();
+                string imagePath = string.Empty;
 
-                // Valid image file extensions
-                string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
-
-                if (Array.Exists(allowedExtensions, ext => ext == fileExtension))
+                // Check if a profile picture has been uploaded
+                if (fileProfilePicture.HasFile)
                 {
-                    // Define the path where the file will be saved
-                    string savePath = Server.MapPath("~/ProfilePictures/");
-                    
-                    // Check if the directory exists, if not, create it
-                    if (!Directory.Exists(savePath))
-                    {
-                        Directory.CreateDirectory(savePath);
-                    }
+                    // Generate a unique file name for the uploaded image
+                    string fileName = Path.GetFileName(fileProfilePicture.PostedFile.FileName);
+                    string folderPath = Server.MapPath("~/img/"); // Ensure the folder exists in your project directory
+                    string filePath = Path.Combine(folderPath, fileName);
 
-                    // Generate a unique file name to avoid overwriting files with the same name
-                    string fileName = Guid.NewGuid().ToString() + fileExtension;
+                    // Save the image to the server
+                    fileProfilePicture.SaveAs(filePath);
 
-                    // Save the file on the server
-                    fileProfilePicture.SaveAs(Path.Combine(savePath, fileName));
-
-                    // Optional: If you want to display the image on the webpage, use the relative path
-                    string fileUrl = "~/ProfilePictures/" + fileName;
-                    
-                    // You can store this file URL in your database, or show it on the webpage
-                    // For example, display the image:
-                    error = "Profile picture uploaded successfully!";
-                   // lblFileError.ForeColor = System.Drawing.Color.Green;
+                    // Store the relative path of the image (stored in the 'img' folder)
+                    imagePath = "~/img/" + fileName; // You can use a relative path or a full path
                 }
-                else
+
+                using (SqlConnection conn = new SqlConnection(path))
                 {
-                    // Invalid file type
-                    error = "Invalid file type. Please upload a valid image file (jpg, png, gif).";
+                    conn.Open();
+
+                    string query = "INSERT INTO Profiles (Dno, FirstName, LastName, Email, Phone, DateOfBirth, Degree, University, Skills, ProfilePicture, Pass_word) " +
+                                   "VALUES (@Dno, @FirstName, @LastName, @Email, @Phone, @DateOfBirth, @Degree, @University, @Skills, @ProfilePicture, @Password)";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Dno", Dno.Text);
+                        cmd.Parameters.AddWithValue("@FirstName", txtFirstName.Text);
+                        cmd.Parameters.AddWithValue("@LastName", txtLastName.Text);
+                        cmd.Parameters.AddWithValue("@Email", txtEmail.Text);
+                        cmd.Parameters.AddWithValue("@Phone", txtPhone.Text);
+                        cmd.Parameters.AddWithValue("@DateOfBirth", DateTime.Parse(txtDateOfBirth.Text));
+                        cmd.Parameters.AddWithValue("@Degree", txtDegree.Text);
+                        cmd.Parameters.AddWithValue("@University", txtUniversity.Text);
+                        cmd.Parameters.AddWithValue("@Skills", txtSkills.Text);
+
+                        // Store the image path in the database
+                        cmd.Parameters.AddWithValue("@ProfilePicture", imagePath); // Save the path in the ProfilePicture column
+
+                        // Hash the password before saving
+                        string hashedPassword = txtPhone.Text;
+                        cmd.Parameters.AddWithValue("@Password", hashedPassword);
+
+                        try
+                        {
+                            int rowsAffected = cmd.ExecuteNonQuery();
+                            if (rowsAffected > 0)
+                            {
+                                ClearForm();
+                                Response.Write("<script>alert('Profile created successfully!');</script>");
+                            }
+                            else
+                            {
+                                Response.Write("<script>alert('No rows were affected. Please try again.');</script>");
+                            }
+                        }
+                        catch (Exception t)
+                        {
+                            Response.Write("<script>alert('Error: " + t.Message + "!');</script>");
+                        }
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // No file was uploaded
-                error = "Please upload a profile picture.";
+                Response.Write("<script>alert('Error occurred: " + ex.Message + "');</script>");
             }
         }
-    
- 
+        private void ClearForm()
+        {
+            // Clear textboxes
+            Dno.Text = "";
+            txtFirstName.Text = "";
+            txtLastName.Text = "";
+            txtEmail.Text = "";
+            txtPhone.Text = "";
+            txtDateOfBirth.Text = "";
+            txtDegree.Text = "";
+            txtUniversity.Text = "";
+            txtSkills.Text = "";
+
+            // Clear file upload
+            fileProfilePicture.Attributes.Clear();
+
+            // Optionally, reset other controls (like drop-downs, checkboxes, etc.)
+        }
+
     }
 }
